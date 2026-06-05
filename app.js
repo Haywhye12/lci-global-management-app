@@ -23,6 +23,7 @@ const multitenancy = require('./middleware/multitenancy');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Handlebars Setup
 app.engine('hbs', engine({
@@ -63,6 +64,11 @@ app.use((req, res, next) => {
     if (host) {
         if (host === 'localhost' || host.endsWith('.localhost')) {
             req.session.cookie.domain = '.localhost';
+        } else if (host.endsWith('.up.railway.app')) {
+            const match = host.match(/([a-zA-Z0-9\-]+)\.up\.railway\.app$/);
+            if (match) {
+                req.session.cookie.domain = '.' + match[0];
+            }
         } else {
             const parts = host.split('.');
             if (parts.length >= 2) {
