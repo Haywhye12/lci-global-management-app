@@ -214,24 +214,146 @@ app.get('/', isAuthenticated, async (req, res) => {
     
     try {
         const activeInstId = req.activeInstallationId;
+        const inst = await Installation.findByPk(activeInstId);
+        const currency = inst ? inst.currency : 'NGN';
+
         const feedPosts = await DashboardPost.findAll({
             where: { installationId: activeInstId },
             include: [{ model: User, attributes: ['fullName', 'profilePicture', 'role'] }],
             order: [['createdAt', 'DESC']]
         });
 
+        // 1. Calculate stats dynamically
+        // Average Attendance:
+        const attendances = await Attendance.findAll({
+            where: { installationId: activeInstId },
+            order: [['serviceDate', 'ASC']]
+        });
+        const avgAttendance = attendances.length > 0
+            ? Math.round(attendances.reduce((sum, a) => sum + a.total, 0) / attendances.length)
+            : 0;
+
+        // Gross Monthly Income:
+        const transactions = await Transaction.findAll({
+            where: { installationId: activeInstId, type: 'income' }
+        });
+        const grossIncome = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        const formattedIncome = currency === 'GBP'
+            ? grossIncome.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 })
+            : grossIncome.toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 });
+
+        // First Timers:
+        const firstTimersCount = await FirstTimer.count({
+            where: { installationId: activeInstId }
+        });
+
+        // Report Status:
+        const latestReport = await WeeklyReport.findOne({
+            where: { installationId: activeInstId },
+            order: [['createdAt', 'DESC']]
+        });
+        const reportStatus = latestReport ? latestReport.status.toUpperCase() : 'NO DATA';
+
+        // 2. Attendance Trends Chart data:
+        const chartLabels = attendances.slice(-6).map(a => {
+            const date = new Date(a.serviceDate);
+            return date.toLocaleString('default', { month: 'short' }) + ' ' + date.getDate();
+        });
+        const chartData = attendances.slice(-6).map(a => a.total);
+
+        // 3. Recent Weekly Reports Table:
+        const recentReports = await WeeklyReport.findAll({
+            where: { installationId: activeInstId },
+            order: [['createdAt', 'DESC']],
+            limit: 5
+        });
+
+        const formattedReports = [];
+        for (const report of recentReports) {
+            const att = await Attendance.findOne({
+                where: {
+                    installationId: activeInstId,
+                    weekNumber: report.weekNumber,
+                    serviceDate: {
+                        [Op.like]: `${report.period}%`
+                    }
+                }
+            });
+            const attendanceTotal = att ? att.total : 0;
+            
+            let incomeTotal = 0;
+            if (att && att.serviceDate) {
+                const dateObj = new Date(att.serviceDate);
+                const startOfWeek = new Date(dateObj);
+                startOfWeek.setDate(dateObj.getDate() - dateObj.getDay());
+                const endOfWeek = new Date(dateObj);
+                endOfWeek.setDate(dateObj.getDate() + (6 - dateObj.getDay()));
+
+                const startStr = startOfWeek.toISOString().split('T')[0];
+                const endStr = endOfWeek.toISOString().split('T')[0];
+
+                const weeklyTransactions = await Transaction.findAll({
+                    where: {
+                        installationId: activeInstId,
+                        type: 'income',
+                        date: {
+                            [Op.between]: [startStr, endStr]
+                        }
+                    }
+                });
+                incomeTotal = weeklyTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+            }
+
+            formattedReports.push({
+                periodName: `Week ${report.weekNumber} - ${new Date(report.period + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+                attendance: attendanceTotal.toLocaleString(),
+                income: currency === 'GBP'
+                    ? incomeTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 })
+                    : incomeTotal.toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }),
+                status: report.status.toUpperCase()
+            });
+        }
+
+        // 4. Monthly Target Progress:
+        const monthlyTarget = 1500;
+        const progressPercentage = avgAttendance > 0 ? Math.min(Math.round((avgAttendance / monthlyTarget) * 100), 100) : 0;
+
         res.render('dashboard', { 
             title: 'Dashboard',
             feedPosts: feedPosts.map(p => p.get({ plain: true })),
+            stats: {
+                avgAttendance: avgAttendance.toLocaleString(),
+                grossIncome: formattedIncome,
+                firstTimers: firstTimersCount,
+                reportStatus: reportStatus,
+                targetPercentage: progressPercentage,
+                targetMessage: progressPercentage > 0 
+                    ? `You've reached ${progressPercentage}% of your attendance goal.`
+                    : `No attendance goal progress yet.`
+            },
+            chartLabels: JSON.stringify(chartLabels.length > 0 ? chartLabels : ['No Data']),
+            chartData: JSON.stringify(chartData.length > 0 ? chartData : [0]),
+            recentReports: formattedReports,
             success: req.query.success,
             error: req.query.error
         });
     } catch (err) {
-        console.error('Failed to load dashboard feed:', err);
+        console.error('Failed to load dashboard:', err);
         res.render('dashboard', { 
             title: 'Dashboard', 
             feedPosts: [], 
-            error: 'Failed to load news feed.' 
+            stats: {
+                avgAttendance: '0',
+                grossIncome: '₦0',
+                firstTimers: 0,
+                reportStatus: 'ERROR',
+                targetPercentage: 0,
+                targetMessage: 'Failed to load targets.'
+            },
+            chartLabels: JSON.stringify(['Error']),
+            chartData: JSON.stringify([0]),
+            recentReports: [],
+            error: 'Failed to load dashboard data.' 
         });
     }
 });
