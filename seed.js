@@ -32,7 +32,9 @@ async function seed() {
         }
 
         console.log('Wiping database and seeding mock records...');
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
         await sequelize.sync({ force: true });
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
         console.log('Database synced successfully.');
 
         // 1. Create Installations (Tenants)
