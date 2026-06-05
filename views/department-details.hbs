@@ -1,0 +1,368 @@
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-end">
+        <div>
+            <div class="flex items-center space-x-3 mb-2">
+                <a href="/departments" class="text-sm font-bold text-gray-400 hover:text-primary transition flex items-center space-x-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <span>Back to Departments</span>
+                </a>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">{{department.name}}</h2>
+            <p class="text-gray-500 mt-1 max-w-2xl">{{department.description}}</p>
+        </div>
+        {{#if isAdmin}}
+        <button onclick="document.getElementById('assign-head-modal').classList.remove('hidden')" class="bg-white border text-primary px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition">Change Head</button>
+        {{/if}}
+    </div>
+
+    {{#if success}}
+    <div class="bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 font-medium">{{success}}</div>
+    {{/if}}
+    {{#if error}}
+    <div class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 font-medium">{{error}}</div>
+    {{/if}}
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Head of Department</p>
+                {{#if department.Head}}
+                <h3 class="text-xl font-bold mt-2 text-gray-900">{{department.Head.fullName}}</h3>
+                {{else}}
+                <h3 class="text-xl font-bold mt-2 text-gray-400 italic">Not Assigned</h3>
+                {{/if}}
+            </div>
+            {{#if department.Head}}
+            <img class="w-14 h-14 rounded-full border border-gray-100 object-cover" src="{{department.Head.profilePicture}}" alt="">
+            {{/if}}
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Members</p>
+            <h3 class="text-2xl font-bold mt-2">{{department.Users.length}}</h3>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Reports</p>
+            <h3 class="text-2xl font-bold mt-2">{{department.DepartmentReports.length}}</h3>
+        </div>
+    </div>
+
+    <!-- Details Section with Tabs -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+            <div class="flex bg-gray-100 p-1 rounded-xl">
+                <button type="button" data-target="members-tab-container" class="dir-tab px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-primary">Workers & Members</button>
+                <button type="button" data-target="reports-tab-container" class="dir-tab px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-primary transition">Department Reports</button>
+            </div>
+            <div class="flex space-x-3">
+                {{#if isAdmin}}
+                <button onclick="document.getElementById('add-member-modal').classList.remove('hidden')" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition hidden" id="add-member-btn">+ Add Member</button>
+                {{/if}}
+                {{#if isHOD}}
+                <button onclick="document.getElementById('create-report-modal').classList.remove('hidden')" class="bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition hidden" id="add-report-btn">+ Submit Report</button>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- Members Table -->
+        <div class="overflow-x-auto tab-content block" id="members-tab-container">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 font-bold">
+                    <tr>
+                        <th class="px-8 py-5">Name</th>
+                        <th class="px-8 py-5">Role</th>
+                        <th class="px-8 py-5">Dept Status</th>
+                        <th class="px-8 py-5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {{#each department.Users}}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-3">
+                                <img class="h-9 w-9 rounded-full object-cover border-2 border-gray-100" src="{{profilePicture}}" alt="">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-900">{{fullName}}</span>
+                                    <span class="text-xs text-gray-500">{{email}}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-xs font-bold uppercase text-gray-500">{{role}}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            {{#if isHead}}
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">HOD</span>
+                            {{else}}
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">Member</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            {{#if ../isAdmin}}
+                            <form action="/departments/{{../department.id}}/members/remove/{{id}}" method="POST" class="inline">
+                                <button type="submit" class="text-red-400 hover:text-red-600 transition text-sm font-bold" onclick="return confirm('Remove this worker from the department?')">Remove</button>
+                            </form>
+                            {{else}}
+                            <span class="text-gray-300 text-sm">-</span>
+                            {{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                    {{#unless department.Users}}
+                    <tr><td colspan="4" class="px-8 py-10 text-center text-gray-500 font-medium">No members assigned to this department yet.</td></tr>
+                    {{/unless}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Reports List -->
+        <div class="overflow-x-auto tab-content hidden p-8" id="reports-tab-container">
+            <div class="space-y-6">
+                {{#each department.DepartmentReports}}
+                <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-sm transition cursor-pointer report-card" 
+                     data-title="{{title}}" 
+                     data-date="{{reportDate}}" 
+                     data-submitter="{{SubmittedBy.fullName}}"
+                     data-attendance="{{attendanceCount}}"
+                     data-comments="{{comments}}"
+                     data-testimony="{{testimony}}"
+                     data-special="{{specialProgram}}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-900">{{title}}</h4>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{comments}}</p>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-100">{{formatDate reportDate}}</span>
+                    </div>
+                    <div class="mt-4 flex items-center space-x-4 text-xs font-medium text-gray-400">
+                        <div class="flex items-center space-x-2">
+                            <span>Submitted by</span>
+                            <img class="h-4 w-4 rounded-full" src="{{SubmittedBy.profilePicture}}" alt="">
+                            <span class="text-gray-700 font-bold">{{SubmittedBy.fullName}}</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <span class="text-primary font-bold">{{attendanceCount}} Present</span>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+                
+                {{#unless department.DepartmentReports}}
+                <div class="text-center py-10 opacity-60">
+                    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <h3 class="text-lg font-bold text-gray-400">No Reports Yet</h3>
+                    <p class="text-sm text-gray-400 mt-1">When the HOD submits reports, they will appear here.</p>
+                </div>
+                {{/unless}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modals -->
+    {{#if isAdmin}}
+    <div id="assign-head-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-lg font-bold">Assign Head of Department</h3>
+                <button type="button" onclick="document.getElementById('assign-head-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <form action="/departments/{{department.id}}/assign-head" method="POST" class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Select New Head</label>
+                    <select name="headId" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                        <option value="">-- Remove current Head --</option>
+                        {{#each allUsers}}
+                        <option value="{{id}}" {{#if (eq id ../department.headId)}}selected{{/if}}>{{fullName}} ({{role}})</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('assign-head-modal').classList.add('hidden')" class="px-4 py-2 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-xl font-bold shadow-md hover:opacity-90 transition">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-member-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-lg font-bold">Add Worker to Department</h3>
+                <button type="button" onclick="document.getElementById('add-member-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <form action="/departments/{{department.id}}/members/add" method="POST" class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Select Worker</label>
+                    <select name="userId" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                        <option value="">Select a worker...</option>
+                        {{#each availableUsers}}
+                        <option value="{{id}}">{{fullName}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('add-member-modal').classList.add('hidden')" class="px-4 py-2 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-xl font-bold shadow-md hover:opacity-90 transition">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- HOD Modals -->
+    {{#if isHOD}}
+    <div id="create-report-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold text-accent">Submit Department Report</h3>
+                <button type="button" onclick="document.getElementById('create-report-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <form action="/departments/{{department.id}}/reports/create" method="POST" class="p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Report Title</label>
+                        <input type="text" name="title" placeholder="e.g. Weekly Update" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Report Date</label>
+                        <input type="date" name="reportDate" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Workers Attendance</label>
+                    <input type="number" name="attendanceCount" placeholder="Number of members present" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Comments / General Notes</label>
+                    <textarea name="comments" rows="3" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm" placeholder="Any comments or notes..."></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Testimonies</label>
+                    <textarea name="testimony" rows="3" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm" placeholder="Any testimonies to share..."></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Special Program / Activities</label>
+                    <textarea name="specialProgram" rows="2" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent transition shadow-sm" placeholder="Details of special programs..."></textarea>
+                </div>
+                <div class="pt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="document.getElementById('create-report-modal').classList.add('hidden')" class="px-6 py-3 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-accent text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- View Report Modal -->
+    <div id="view-report-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-start bg-gray-50/50">
+                <div>
+                    <h3 id="vr-title" class="text-xl font-bold text-gray-900"></h3>
+                    <p id="vr-meta" class="text-sm font-medium text-gray-500 mt-1"></p>
+                </div>
+                <button type="button" onclick="document.getElementById('view-report-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-8 overflow-y-auto space-y-6">
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Attendance</h4>
+                    <p id="vr-attendance" class="text-lg font-bold text-primary"></p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Comments</h4>
+                    <p id="vr-comments" class="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-xl"></p>
+                </div>
+                <div id="vr-testimony-container">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Testimony</h4>
+                    <p id="vr-testimony" class="text-gray-700 whitespace-pre-wrap leading-relaxed bg-green-50/50 p-4 rounded-xl border border-green-100"></p>
+                </div>
+                <div id="vr-special-container">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Special Program</h4>
+                    <p id="vr-special" class="text-gray-700 whitespace-pre-wrap leading-relaxed bg-purple-50/50 p-4 rounded-xl border border-purple-100"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dirTabs = document.querySelectorAll('.dir-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const addMemberBtn = document.getElementById('add-member-btn');
+        const addReportBtn = document.getElementById('add-report-btn');
+
+        // Initial state logic for buttons
+        if (addMemberBtn) addMemberBtn.classList.remove('hidden');
+
+        dirTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                dirTabs.forEach(t => {
+                    t.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                    t.classList.add('text-gray-500');
+                });
+                
+                tabContents.forEach(content => {
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                });
+                
+                tab.classList.remove('text-gray-500');
+                tab.classList.add('bg-white', 'shadow-sm', 'text-primary');
+
+                const targetId = tab.dataset.target;
+                if (targetId) {
+                    const targetContent = document.getElementById(targetId);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        targetContent.classList.add('block');
+                    }
+                }
+
+                // Show/hide relevant buttons
+                if (targetId === 'members-tab-container') {
+                    if (addMemberBtn) addMemberBtn.classList.remove('hidden');
+                    if (addReportBtn) addReportBtn.classList.add('hidden');
+                } else if (targetId === 'reports-tab-container') {
+                    if (addMemberBtn) addMemberBtn.classList.add('hidden');
+                    if (addReportBtn) addReportBtn.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Handle Report Card Clicks
+        const reportCards = document.querySelectorAll('.report-card');
+        reportCards.forEach(card => {
+            card.addEventListener('click', () => {
+                document.getElementById('vr-title').innerText = card.dataset.title;
+                document.getElementById('vr-meta').innerText = `Submitted by ${card.dataset.submitter} on ${new Date(card.dataset.date).toLocaleDateString()}`;
+                
+                document.getElementById('vr-attendance').innerText = `${card.dataset.attendance} Members Present`;
+                document.getElementById('vr-comments').innerText = card.dataset.comments || 'No comments provided.';
+                
+                const testimony = card.dataset.testimony;
+                const testimonyContainer = document.getElementById('vr-testimony-container');
+                if (testimony && testimony.trim() !== '') {
+                    testimonyContainer.classList.remove('hidden');
+                    document.getElementById('vr-testimony').innerText = testimony;
+                } else {
+                    testimonyContainer.classList.add('hidden');
+                }
+
+                const special = card.dataset.special;
+                const specialContainer = document.getElementById('vr-special-container');
+                if (special && special.trim() !== '') {
+                    specialContainer.classList.remove('hidden');
+                    document.getElementById('vr-special').innerText = special;
+                } else {
+                    specialContainer.classList.add('hidden');
+                }
+
+                document.getElementById('view-report-modal').classList.remove('hidden');
+            });
+        });
+    });
+</script>

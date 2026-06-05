@@ -1,0 +1,51 @@
+<div class="max-w-6xl mx-auto space-y-8">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Audit & Activity Log</h2>
+        <p class="text-gray-500 mt-1">Complete activity ledger of all user actions, logins, and data changes.</p>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Recent Activity</h3>
+            <span class="text-sm text-gray-400 font-medium">Showing last 200 entries</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 font-bold border-b border-gray-100">
+                    <tr>
+                        <th class="px-8 py-4">Timestamp</th>
+                        <th class="px-8 py-4">Action</th>
+                        <th class="px-8 py-4">User</th>
+                        <th class="px-8 py-4">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {{#each logs}}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="px-8 py-4 text-xs text-gray-400 font-medium whitespace-nowrap">{{createdAt}}</td>
+                        <td class="px-8 py-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider font-mono
+                                {{#if (eq action 'LOGIN_SUCCESS')}}bg-emerald-100 text-emerald-700{{/if}}
+                                {{#if (eq action 'LOGIN_FAILED')}}bg-red-100 text-red-700{{/if}}
+                                {{#if (eq action 'MEMBER_CREATED')}}bg-blue-100 text-blue-700{{/if}}
+                                {{#if (eq action 'MEMBER_CONVERTED')}}bg-indigo-100 text-indigo-700{{/if}}
+                                {{#if (eq action 'TRANSFER_COMPLETED')}}bg-purple-100 text-purple-700{{/if}}
+                                {{#if (eq action 'TRANSACTION_CREATED')}}bg-amber-100 text-amber-700{{/if}}
+                                {{#if (eq action 'USER_CREATED')}}bg-teal-100 text-teal-700{{/if}}
+                                {{#if (eq action '2FA_SUCCESS')}}bg-cyan-100 text-cyan-700{{/if}}">
+                                {{action}}
+                            </span>
+                        </td>
+                        <td class="px-8 py-4 text-sm font-bold text-gray-700">
+                            {{#if User}}{{User.fullName}}<span class="block text-xs text-gray-400 font-normal">{{User.email}}</span>{{else}}<span class="text-gray-400">System</span>{{/if}}
+                        </td>
+                        <td class="px-8 py-4 text-sm text-gray-500 max-w-xs">{{details}}</td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="4" class="px-8 py-10 text-center text-gray-500">No audit records found.</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

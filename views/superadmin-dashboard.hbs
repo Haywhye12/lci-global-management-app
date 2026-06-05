@@ -1,0 +1,97 @@
+<div class="space-y-8">
+    <div class="flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Super Admin Dashboard</h2>
+            <p class="text-gray-500 mt-1">Overview of all church installations and branches.</p>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="document.getElementById('create-installation-modal').classList.remove('hidden')" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition shadow-md flex items-center space-x-2">
+                <span>+ New Installation</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Installations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{#each installations}}
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">{{this.name}}</h3>
+                    <p class="text-xs font-medium text-gray-500 mt-1 flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{#if this.location}}{{this.location}}{{else}}N/A{{/if}}
+                    </p>
+                </div>
+                <span class="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-bold uppercase rounded-full tracking-wider">{{this.status}}</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <span class="block text-2xl font-bold text-primary">{{this.userCount}}</span>
+                    <span class="block text-[10px] uppercase font-bold text-gray-400 mt-1">Staff</span>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <span class="block text-2xl font-bold text-accent">{{this.memberCount}}</span>
+                    <span class="block text-[10px] uppercase font-bold text-gray-400 mt-1">Members</span>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <span class="block text-2xl font-bold text-purple-600">{{this.departmentCount}}</span>
+                    <span class="block text-[10px] uppercase font-bold text-gray-400 mt-1">Depts</span>
+                </div>
+            </div>
+
+            <a href="/superadmin/switch-installation/{{this.id}}" class="block w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-center rounded-xl text-sm font-bold text-gray-700 transition-colors">
+                Manage Installation &rarr;
+            </a>
+        </div>
+        {{else}}
+        <div class="col-span-full bg-white p-12 rounded-2xl border border-gray-100 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">No Installations Found</h3>
+            <p class="text-gray-500 mt-2">There are no church installations registered in the system yet.</p>
+        </div>
+        {{/each}}
+    </div>
+</div>
+
+<!-- Create Installation Modal -->
+<div id="create-installation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-xl font-bold text-gray-900">New Installation</h3>
+            <button onclick="document.getElementById('create-installation-modal').classList.add('hidden')" class="text-gray-400 hover:text-red-500 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form action="/superadmin/installations/create" method="POST" class="p-6 space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Installation Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" required placeholder="e.g. LCI - Ikeja Branch" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary outline-none transition shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Location / Address</label>
+                    <input type="text" name="location" placeholder="e.g. 15 Oba Akran Ave, Ikeja" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary outline-none transition shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Status</label>
+                    <select name="status" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary outline-none transition shadow-sm">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="pt-4 flex space-x-3">
+                <button type="button" onclick="document.getElementById('create-installation-modal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Create Branch</button>
+            </div>
+        </form>
+    </div>
+</div>

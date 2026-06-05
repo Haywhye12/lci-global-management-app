@@ -1,0 +1,95 @@
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Attendance Check-In</h2>
+            <p class="text-gray-500 mt-1">Manually check in members or use the QR code for self check-in. Today: <strong>{{today}}</strong></p>
+        </div>
+        <a href="/attendance/audit" class="text-sm font-bold text-primary border border-primary/20 px-4 py-2.5 rounded-xl hover:bg-primary/5 transition">View Audit Report →</a>
+    </div>
+
+    {{#if success}}<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl"><p class="text-sm text-green-700 font-bold">{{success}}</p></div>{{/if}}
+    {{#if error}}<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl"><p class="text-sm text-red-700 font-bold">{{error}}</p></div>{{/if}}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Manual Check-in Form -->
+        <div class="md:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+            <h3 class="text-lg font-bold text-gray-900">Manual Member Check-In</h3>
+            <form action="/attendance/checkin" method="POST" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Search & Select Member *</label>
+                    <select name="memberId" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                        <option value="">Select a member...</option>
+                        {{#each members}}
+                        <option value="{{id}}">{{fullName}} {{#if phoneNumber}}({{phoneNumber}}){{/if}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Service Type *</label>
+                        <select name="serviceType" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="sunday">Sunday Service</option>
+                            <option value="midweek">Midweek Service</option>
+                            <option value="youth">Youth Service</option>
+                            <option value="children">Children's Service</option>
+                            <option value="online">Online Service</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Service Date</label>
+                        <input type="date" name="serviceDate" value="{{today}}" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Mark Attendance</button>
+            </form>
+        </div>
+
+        <!-- QR Code Panel -->
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4 text-center">
+            <h3 class="text-lg font-bold text-gray-900">QR Self Check-In</h3>
+            <p class="text-sm text-gray-500">Display this QR code at the entrance. Members scan to self-register.</p>
+            {{#if qrCodeUrl}}
+            <img src="{{qrCodeUrl}}" alt="Check-in QR Code" class="mx-auto w-48 h-48 rounded-2xl border-4 border-gray-100">
+            {{/if}}
+            <a href="/attendance/scan-checkin" target="_blank" class="block text-xs text-primary font-bold hover:underline">Preview Check-In Portal →</a>
+        </div>
+    </div>
+
+    <!-- Today's Check-Ins -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Today's Check-Ins ({{checkIns.length}} members)</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 font-bold border-b border-gray-100">
+                    <tr>
+                        <th class="px-8 py-4">Member</th>
+                        <th class="px-8 py-4">Service</th>
+                        <th class="px-8 py-4">Check-In Method</th>
+                        <th class="px-8 py-4">Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {{#each checkIns}}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="px-8 py-4 font-bold text-gray-900">{{Member.fullName}}</td>
+                        <td class="px-8 py-4">
+                            <span class="capitalize text-sm text-gray-600">{{serviceType}}</span>
+                        </td>
+                        <td class="px-8 py-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                                {{#if (eq checkInMethod 'qr')}}bg-amber-100 text-amber-700{{else}}bg-slate-100 text-slate-600{{/if}}">
+                                {{checkInMethod}}
+                            </span>
+                        </td>
+                        <td class="px-8 py-4 text-sm text-gray-500">{{checkInTime}}</td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="4" class="px-8 py-10 text-center text-gray-500">No check-ins recorded for today yet.</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

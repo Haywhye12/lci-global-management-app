@@ -1,0 +1,290 @@
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Member Care & Follow-Up</h2>
+            <p class="text-gray-500 mt-1">Track first-timers, visitors, and converts. Log outreach activities and manage follow-up tasks.</p>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="document.getElementById('add-visitor-modal').classList.remove('hidden')" class="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">+ Register First-Timer</button>
+        </div>
+    </div>
+
+    {{#if success}}
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
+        <p class="text-sm text-green-700 font-bold">{{success}}</p>
+    </div>
+    {{/if}}
+    {{#if error}}
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl">
+        <p class="text-sm text-red-700 font-bold">{{error}}</p>
+    </div>
+    {{/if}}
+
+    <!-- Follow-Up Reminders / Alerts -->
+    {{#if reminders}}
+    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 space-y-4">
+        <div class="flex items-center space-x-2 text-amber-800">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <h3 class="text-lg font-bold">Pending Follow-Up Reminders</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{#each reminders}}
+            <div class="bg-white p-4 rounded-2xl border border-amber-100 shadow-sm flex justify-between items-start">
+                <div>
+                    <h4 class="font-bold text-gray-900">
+                        {{#if FirstTimer}}
+                            First-Timer: {{FirstTimer.fullName}}
+                        {{else}}
+                            Member: {{Member.fullName}}
+                        {{/if}}
+                    </h4>
+                    <p class="text-xs text-gray-500 font-medium">Due Date: {{reminderDate}}</p>
+                    <p class="text-sm text-gray-600 mt-2">Next Step required: <strong class="text-amber-700">{{nextStep}}</strong></p>
+                </div>
+                <button onclick="openFollowupModal('{{FirstTimer.id}}', '{{Member.id}}', '{{FirstTimer.fullName}}{{Member.fullName}}')" class="bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs px-3 py-1.5 rounded-lg font-bold transition">Log Care</button>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- Main List of Visitors & New Converts -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+            <h3 class="text-xl font-bold">First-Timers & Visitors Registry</h3>
+        </div>
+        <div class="divide-y divide-gray-100">
+            {{#each visitors}}
+            <div class="p-8 hover:bg-gray-50/50 transition space-y-6">
+                <!-- Header Info -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-3 flex-wrap">
+                            <h4 class="text-lg font-bold text-gray-900">{{fullName}}</h4>
+                            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded capitalize">{{gender}}</span>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                                {{#if (eq status 'pending')}}bg-amber-100 text-amber-700{{/if}}
+                                {{#if (eq status 'contacted')}}bg-blue-100 text-blue-700{{/if}}
+                                {{#if (eq status 'converted')}}bg-green-100 text-green-700{{/if}}">
+                                {{status}}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-500 font-medium">
+                            Visited on <span class="text-gray-700 font-semibold">{{visitDate}}</span> | Invited by: <span class="text-gray-700 font-semibold">{{#if invitedBy}}{{invitedBy}}{{else}}None{{/if}}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openFollowupModal('{{id}}', '', '{{fullName}}')" class="bg-white border text-primary text-xs px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition">Log Follow-Up</button>
+                        {{#if (eq status 'contacted')}}
+                        <form action="/care/first-timer/{{id}}/convert" method="POST" class="inline">
+                            <button type="submit" class="bg-emerald-600 text-white text-xs px-4 py-2 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition">Convert to Member</button>
+                        </form>
+                        {{/if}}
+                    </div>
+                </div>
+
+                <!-- Contact & Prayer Requests -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-gray-50 p-6 rounded-2xl text-sm">
+                    <div>
+                        <span class="block text-xs uppercase font-bold text-gray-400">Contact Details</span>
+                        <p class="text-gray-700 font-bold mt-1">{{#if phoneNumber}}{{phoneNumber}}{{else}}No Phone{{/if}}</p>
+                        {{#if email}}<p class="text-gray-500">{{email}}</p>{{/if}}
+                        {{#if socialMedia}}<p class="text-xs text-primary font-semibold mt-1">Social: <span class="text-gray-600 font-normal">{{socialMedia}}</span></p>{{/if}}
+                    </div>
+                    <div>
+                        <span class="block text-xs uppercase font-bold text-gray-400">Personal Profile</span>
+                        <p class="text-gray-700 font-medium mt-1">Occ: <span class="font-bold">{{#if occupation}}{{occupation}}{{else}}N/A{{/if}}</span></p>
+                        <p class="text-gray-600 text-xs mt-0.5">Status: <span class="font-bold text-gray-700 capitalize">{{#if maritalStatus}}{{maritalStatus}}{{else}}N/A{{/if}}</span></p>
+                        {{#if howHeard}}<p class="text-gray-600 text-xs mt-0.5">Source: <span class="font-bold text-gray-700">{{howHeard}}</span></p>{{/if}}
+                    </div>
+                    <div>
+                        <span class="block text-xs uppercase font-bold text-gray-400">Address</span>
+                        <p class="text-gray-600 mt-1">{{#if address}}{{address}}{{else}}Not specified{{/if}}</p>
+                    </div>
+                    <div>
+                        <span class="block text-xs uppercase font-bold text-gray-400">Prayer Request / Notes</span>
+                        <p class="text-gray-600 mt-1 italic">"{{#if prayerRequest}}{{prayerRequest}}{{else}}None{{/if}}"</p>
+                    </div>
+                </div>
+
+                <!-- Follow-Up History Timeline -->
+                {{#if FollowUps}}
+                <div class="space-y-4">
+                    <h5 class="text-xs uppercase font-bold text-gray-400 tracking-wider">Follow-Up History</h5>
+                    <div class="relative border-l border-gray-200 pl-6 ml-3 space-y-4">
+                        {{#each FollowUps}}
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-primary border-4 border-white ring-4 ring-slate-100"></span>
+                            <div class="bg-slate-50 p-4 rounded-xl space-y-2">
+                                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                                    <span>Follow-up by {{User.fullName}}</span>
+                                    <span>{{actionDate}}</span>
+                                </div>
+                                <p class="text-sm text-gray-700 font-medium">"{{notes}}"</p>
+                                {{#if nextStep}}
+                                <div class="text-xs font-bold text-primary">Next Step: {{nextStep}}</div>
+                                {{/if}}
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+            {{else}}
+            <div class="p-12 text-center text-gray-500 font-medium">No visitors or first-timers registered yet.</div>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- Register Visitor Modal -->
+    <div id="add-visitor-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold">Register First-Timer</h3>
+                <button type="button" onclick="document.getElementById('add-visitor-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form action="/care/first-timer/create" method="POST" class="p-8 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Full Name *</label>
+                    <input type="text" name="fullName" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Phone Number</label>
+                        <input type="tel" name="phoneNumber" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Email Address</label>
+                        <input type="email" name="email" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Gender</label>
+                        <select name="gender" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Visit Date</label>
+                        <input type="date" name="visitDate" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Service Attended</label>
+                        <input type="text" name="serviceAttended" placeholder="e.g. Sunday Service" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Occupation</label>
+                        <input type="text" name="occupation" placeholder="e.g. Software Engineer, Trader" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Marital Status</label>
+                        <select name="maritalStatus" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">How did you hear about us?</label>
+                        <select name="howHeard" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Twitter/X">Twitter/X</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="Friend/Relative">Friend / Relative</option>
+                            <option value="Flyer/Banner">Flyer / Banner</option>
+                            <option value="Evangelism Outreach">Evangelism Outreach</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Social Media Handle</label>
+                        <input type="text" name="socialMedia" placeholder="e.g. @username (Facebook, Instagram)" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Invited By (Name, Optional)</label>
+                        <input type="text" name="invitedBy" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-bold text-gray-700 ml-1">Status</label>
+                        <select name="status" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="pending">Pending</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="converted">Converted</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Prayer Request / Notes</label>
+                    <textarea name="prayerRequest" rows="2" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm"></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Home Address</label>
+                    <textarea name="address" rows="2" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm"></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('add-visitor-modal').classList.add('hidden')" class="px-6 py-3 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Save First-Timer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log Follow-Up Modal -->
+    <div id="add-followup-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold">Log Care / Follow-Up</h3>
+                <button type="button" onclick="document.getElementById('add-followup-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form action="/care/followup/create" method="POST" class="p-8 space-y-4">
+                <input type="hidden" name="firstTimerId" id="followup-firsttimer-id">
+                <input type="hidden" name="memberId" id="followup-member-id">
+                <div>
+                    <label class="block text-sm font-bold text-gray-500">Care Recipient</label>
+                    <div id="followup-recipient-name" class="font-extrabold text-lg text-primary mt-1"></div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Outreach Notes / Conversation Summary *</label>
+                    <textarea name="notes" required rows="3" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm" placeholder="Summarize call, visit, or prayer..."></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Next Action Step *</label>
+                    <input type="text" name="nextStep" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm" placeholder="e.g. Call next Friday, invite to Cell Group">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Follow-Up Reminder Date</label>
+                    <input type="date" name="reminderDate" class="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition shadow-sm">
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('add-followup-modal').classList.add('hidden')" class="px-6 py-3 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Save Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openFollowupModal(firstTimerId, memberId, name) {
+        document.getElementById('followup-firsttimer-id').value = firstTimerId || '';
+        document.getElementById('followup-member-id').value = memberId || '';
+        document.getElementById('followup-recipient-name').textContent = name;
+        document.getElementById('add-followup-modal').classList.remove('hidden');
+    }
+</script>

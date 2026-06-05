@@ -1,0 +1,145 @@
+<div class="max-w-5xl mx-auto space-y-8">
+    <div class="flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">First Timers</h2>
+            <p class="text-gray-500 mt-1">Register new visitors and track their follow-up progress.</p>
+        </div>
+        <button id="show-registration" class="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">+ Add Visitor</button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-widest">Total Visitors (May)</p>
+            <h3 class="text-3xl font-bold mt-2">156</h3>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-widest">Follow-ups Pending</p>
+            <h3 class="text-3xl font-bold mt-2 text-orange-500">24</h3>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-widest">Conversions</p>
+            <h3 class="text-3xl font-bold mt-2 text-green-500">18</h3>
+        </div>
+    </div>
+
+    <!-- Registration Form (Modal style - hidden by default) -->
+    <div id="registration-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold">New Visitor Registration</h3>
+                <button onclick="document.getElementById('registration-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form action="/first-timers/register" method="POST" class="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Full Name</label>
+                        <input type="text" name="fullName" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Phone Number</label>
+                        <input type="tel" name="phoneNumber" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Gender</label>
+                        <select name="gender" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Date Visited</label>
+                        <input type="date" name="visitDate" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-gray-700">Residential Address</label>
+                    <textarea name="address" rows="2" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Invited By</label>
+                        <input type="text" name="invitedBy" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-gray-700">Service Attended</label>
+                        <input type="text" name="serviceAttended" placeholder="e.g. Sunday 1st Service" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-gray-700">Prayer Request (Optional)</label>
+                    <textarea name="prayerRequest" rows="2" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm"></textarea>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-4">
+                    <button type="button" onclick="document.getElementById('registration-modal').classList.add('hidden')" class="px-6 py-3 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Register Visitor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Visitors List -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold">Recent Visitors</h3>
+            <div class="flex space-x-2">
+                <input type="text" placeholder="Search visitors..." class="bg-gray-50 border-none rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-primary transition shadow-sm w-64">
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 font-bold">
+                    <tr>
+                        <th class="px-8 py-5">Full Name</th>
+                        <th class="px-8 py-5">Visit Date</th>
+                        <th class="px-8 py-5">Contact</th>
+                        <th class="px-8 py-5">Status</th>
+                        <th class="px-8 py-5">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {{#each visitors}}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    {{initials fullName}}
+                                </div>
+                                <span class="font-bold text-gray-900">{{fullName}}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-sm text-gray-600">{{formatDate visitDate}}</td>
+                        <td class="px-8 py-5 text-sm text-gray-600">{{phoneNumber}}</td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                {{#if (eq status 'pending')}}bg-orange-100 text-orange-600{{/if}}
+                                {{#if (eq status 'contacted')}}bg-blue-100 text-blue-600{{/if}}
+                                {{#if (eq status 'converted')}}bg-green-100 text-green-600{{/if}}">
+                                {{status}}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <button class="text-primary font-bold text-sm hover:underline">Follow Up</button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('show-registration').addEventListener('click', () => {
+        document.getElementById('registration-modal').classList.remove('hidden');
+    });
+</script>

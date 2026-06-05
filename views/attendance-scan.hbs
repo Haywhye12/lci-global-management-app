@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{tenantName}} — Self Check-In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Outfit', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full space-y-8 text-center">
+        <div class="space-y-3">
+            <div class="w-20 h-20 bg-white/10 border border-white/20 rounded-3xl mx-auto flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h1 class="text-3xl font-extrabold text-white">{{tenantName}}</h1>
+            <p class="text-slate-300 font-medium">Service Self Check-In Portal</p>
+        </div>
+
+        {{#if success}}
+        <div class="bg-emerald-500/20 border border-emerald-500/40 rounded-3xl p-6 text-emerald-300 text-sm font-semibold leading-relaxed">
+            ✅ {{success}}
+        </div>
+        {{/if}}
+
+        {{#if error}}
+        <div class="bg-red-500/20 border border-red-500/40 rounded-3xl p-6 text-red-300 text-sm font-semibold leading-relaxed">
+            ❌ {{error}}
+        </div>
+        {{/if}}
+
+        {{#unless success}}
+        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 space-y-6 text-left">
+            <div>
+                <h2 class="text-white font-bold text-lg">Check In to Today's Service</h2>
+                <p class="text-slate-400 text-sm mt-1">Enter your registered phone number or email address.</p>
+            </div>
+            <form action="/attendance/scan-checkin" method="POST" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-slate-300 ml-1">Phone Number or Email</label>
+                    <input type="text" name="contactInfo" required autofocus
+                        class="w-full bg-white/10 border border-white/20 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-slate-500 transition"
+                        placeholder="+2348012345678 or email@example.com">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-slate-300 ml-1">Service Type</label>
+                    <select name="serviceType" required class="w-full bg-white/10 border border-white/20 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 transition">
+                        <option value="sunday">Sunday Service</option>
+                        <option value="midweek">Midweek Service</option>
+                        <option value="youth">Youth Service</option>
+                        <option value="children">Children's Service</option>
+                        <option value="online">Online Service</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-2xl transition shadow-xl shadow-amber-900/30 text-sm uppercase tracking-wider">
+                    ✅ Check Me In
+                </button>
+            </form>
+        </div>
+        {{/unless}}
+
+        <p class="text-slate-600 text-xs">Powered by LCI Church Management System</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a365d',
+                        secondary: '#2d3748',
+                        accent: '#ed8936',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-md p-10 rounded-3xl border border-white/20 shadow-2xl text-white">
+        <div class="text-center">
+            <img src="/images/logo.jpg" alt="LCI Logo" class="mx-auto w-16 h-16 object-contain rounded-2xl mb-6 shadow-lg border border-white/10">
+            <h2 class="text-2xl font-bold tracking-tight">Two-Factor Authentication</h2>
+            <p class="mt-2 text-sm text-slate-300">Open your authenticator app (Google Authenticator, Duo, etc.) and enter the 6-digit code.</p>
+        </div>
+
+        {{#if error}}
+        <div class="bg-red-500/20 border-l-4 border-red-500 p-4 rounded-xl text-red-200">
+            <p class="text-sm font-semibold">{{error}}</p>
+        </div>
+        {{/if}}
+
+        <form class="mt-8 space-y-6" action="/auth/2fa/verify" method="POST">
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label for="token" class="text-xs font-bold uppercase tracking-wider text-slate-300 ml-1">Authenticator Code</label>
+                    <input id="token" name="token" type="text" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required 
+                        class="block w-full text-center tracking-widest text-2xl px-4 py-3 bg-white/5 border border-white/15 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition" 
+                        placeholder="000000">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full py-4 px-4 text-sm font-bold rounded-xl text-white bg-accent hover:bg-orange-600 transition shadow-lg shadow-orange-500/20">
+                    Verify & Continue
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-6">
+            <a href="/auth/logout" class="text-xs text-slate-400 hover:text-white transition">Cancel and Logout</a>
+        </div>
+    </div>
+</body>
+</html>

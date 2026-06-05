@@ -1,0 +1,129 @@
+# Church Multi-Tenant Reporting System
+## Solution Architecture Document
+
+---
+
+# 1. Project Overview
+
+## Project Name
+Church Multi-Tenant Reporting & Finance Management System
+
+## Objective
+To build a scalable web-based multi-tenant platform that allows different church installations (branches) to manage:
+
+- Monthly attendance reports
+- Financial records
+- Dynamic weekly reporting
+- Special event tracking
+- Dashboard summaries
+- PDF/Print-ready reports
+
+Each branch operates independently using its own account while the Super Admin oversees all branches from a centralized dashboard.
+
+---
+
+# 2. Core Features
+
+## 2.1 Multi-Tenant Branch Management
+
+### Features
+- Branch registration/login
+- Role-based access control
+- Data isolation per branch
+- Super admin management panel
+
+### Roles
+
+| Role | Permissions |
+|------|-------------|
+| Super Admin | Access all branches |
+| Branch Admin | Access only own branch |
+| Accountant | Finance-only access |
+| Secretary | Attendance/report access |
+
+---
+
+# 3. System Modules
+
+---
+
+# 3.1 Dynamic Calendar Module
+
+## Objective
+Automatically generate reporting weeks based on the selected month and year.
+
+## Features
+- Select month/year
+- Auto-detect:
+  - 4-week month
+  - 5-week month
+- Dynamic reporting tables
+
+## Example
+
+### February
+- Week 1
+- Week 2
+- Week 3
+- Week 4
+
+### March
+- Week 1
+- Week 2
+- Week 3
+- Week 4
+- Week 5
+
+# Additional Features Integration
+## Extended Church Management System Modules
+
+The following modules have now been added to the system architecture:
+
+1. First Timer & Follow-Up System
+2. Department Management
+3. Certificate Generation
+4. Communication Center
+5. Event Management System
+6. Payroll & Welfare Management
+
+---
+
+# 1. First Timer & Follow-Up System
+
+## Objective
+Track visitors, new converts, and follow-up activities to improve member retention and church growth.
+
+---
+
+# Features
+
+## First Timer Registration
+
+### Capture Details
+
+| Field | Description |
+|------|-------------|
+| Full Name | Visitor name |
+| Phone Number | Contact |
+| Email | Optional |
+| Gender | Male/Female |
+| Address | Residential address |
+| Invited By | Referring member |
+| Service Attended | Sunday/Special |
+| Prayer Request | Optional |
+| Date Visited | Visit date |
+
+---
+
+# Follow-Up Workflow
+
+```text id="u4f2qk"
+Visitor Registered
+      ↓
+Assigned to Follow-Up Officer
+      ↓
+Phone Call / SMS / Visit
+      ↓
+Follow-Up Notes Recorded
+      ↓
+Visitor Converts to Member 

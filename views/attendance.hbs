@@ -1,0 +1,516 @@
+<div class="max-w-6xl mx-auto space-y-8 pb-12">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Service Attendance Portal</h2>
+            <p class="text-gray-500 mt-1">Record, monitor, and export attendance analytics for <span class="font-semibold text-primary">{{monthName}} {{year}}</span>.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+                <input type="month" id="attendance-month" value="{{year}}-{{month}}" onchange="window.location.href = '/attendance?month=' + this.value" 
+                    class="bg-white border border-gray-150 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition cursor-pointer">
+            </div>
+            
+            <a href="/export?type=attendance&month={{month}}&year={{year}}" 
+                class="inline-flex items-center gap-2 bg-white border border-gray-150 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export CSV
+            </a>
+            
+            <button id="save-attendance-btn" 
+                class="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 active:scale-[0.98] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                </svg>
+                Save All Records
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stat Cards (Dynamically computed) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Total Headcount</span>
+                <span id="kpi-total-headcount" class="text-2xl font-extrabold text-gray-900 mt-1">0</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path>
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Avg. Sunday Attendance</span>
+                <span id="kpi-avg-sunday" class="text-2xl font-extrabold text-gray-900 mt-1">0</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </div>
+            <div class="flex-grow">
+                <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Sunday Split (M / F / C)</span>
+                <div class="flex items-baseline space-x-1 mt-1 text-sm font-bold text-gray-900">
+                    <span id="kpi-split-male" class="text-blue-600">0</span>
+                    <span class="text-gray-300">/</span>
+                    <span id="kpi-split-female" class="text-pink-600">0</span>
+                    <span class="text-gray-300">/</span>
+                    <span id="kpi-split-child" class="text-amber-600">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+            <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Special Programs Logged</span>
+                <span id="kpi-specials-count" class="text-2xl font-extrabold text-gray-900 mt-1">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-gray-100/80 p-1.5 rounded-2xl flex max-w-lg shadow-inner">
+        <button onclick="switchTab('sunday')" id="tab-btn-sunday" class="flex-1 py-3 text-center text-sm font-bold rounded-xl transition flex items-center justify-center space-x-2 bg-white text-gray-900 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span>Sunday Services</span>
+        </button>
+        <button onclick="switchTab('weekday')" id="tab-btn-weekday" class="flex-1 py-3 text-center text-sm font-bold rounded-xl transition flex items-center justify-center space-x-2 text-gray-500 hover:text-gray-950">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Mid-Week</span>
+        </button>
+        <button onclick="switchTab('special')" id="tab-btn-special" class="flex-1 py-3 text-center text-sm font-bold rounded-xl transition flex items-center justify-center space-x-2 text-gray-500 hover:text-gray-950">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.25.59 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.17 0l-3.971 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 10.3c-.77-.56-.371-1.81.59-1.81h4.907a1 1 0 00.95-.69l1.519-4.674z"></path></svg>
+            <span>Special Events</span>
+        </button>
+    </div>
+
+    <!-- Sunday Services Content -->
+    <div id="tab-panel-sunday" class="space-y-6">
+        {{#each weeks}}
+        <div class="attendance-card bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden" data-week="{{this.weekNumber}}">
+            <div class="p-6 md:p-8 bg-gray-50/50 border-b border-gray-50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <span class="w-2.5 h-6 bg-primary rounded-full"></span>
+                    <h3 class="text-xl font-bold text-gray-900">Week {{this.weekNumber}} Sunday</h3>
+                </div>
+                <div class="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Sunday:</span>
+                    <span class="text-lg font-black text-primary row-total">0</span>
+                </div>
+            </div>
+            
+            <div class="p-6 md:p-8 space-y-6">
+                <!-- Count Inputs -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Male
+                        </label>
+                        <input type="number" class="male-input w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm font-bold text-lg" 
+                            placeholder="0" value="{{this.sunday.male}}">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span> Female
+                        </label>
+                        <input type="number" class="female-input w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm font-bold text-lg" 
+                            placeholder="0" value="{{this.sunday.female}}">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Children
+                        </label>
+                        <input type="number" class="child-input w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm font-bold text-lg" 
+                            placeholder="0" value="{{this.sunday.child}}">
+                    </div>
+                </div>
+
+                <!-- Descriptive Metadata -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-50">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Special Program / Theme</label>
+                        <input type="text" placeholder="e.g. Youth Sunday, Overflowing Joy" class="theme-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                            value="{{this.sunday.specialProgram}}">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Comments / Key Highlight</label>
+                        <input type="text" placeholder="e.g. Rain affected arrival times" class="comments-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                            value="{{this.sunday.comments}}">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Noteworthy Testimony</label>
+                        <input type="text" placeholder="e.g. Breakthrough financial testimony" class="testimony-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                            value="{{this.sunday.testimony}}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <!-- Mid-Week Services Content -->
+    <div id="tab-panel-weekday" class="space-y-6 hidden">
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <div class="flex items-center space-x-3 mb-8">
+                <span class="w-2.5 h-6 bg-amber-500 rounded-full"></span>
+                <h3 class="text-xl font-bold text-gray-900">Mid-Week / Wednesday Services</h3>
+            </div>
+
+            <div class="space-y-8 divide-y divide-gray-100">
+                {{#each weeks}}
+                <div class="weekday-row pt-6 first:pt-0 space-y-4" data-week="{{this.weekNumber}}">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h4 class="font-bold text-lg text-gray-800">Week {{this.weekNumber}} Mid-Week</h4>
+                        <div class="w-full sm:w-48 space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Total Attendance</label>
+                            <input type="number" class="total-input w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary transition text-base font-bold shadow-sm" 
+                                placeholder="0" value="{{this.weekday.total}}">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-gray-500 uppercase ml-1">Special Program / Theme</label>
+                            <input type="text" placeholder="e.g. Healing Service" class="theme-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                                value="{{this.weekday.specialProgram}}">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-gray-500 uppercase ml-1">Comments</label>
+                            <input type="text" placeholder="General service feedback" class="comments-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                                value="{{this.weekday.comments}}">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-gray-500 uppercase ml-1">Testimony</label>
+                            <input type="text" placeholder="Logged testimonies" class="testimony-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
+                                value="{{this.weekday.testimony}}">
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Special Services Content -->
+    <div id="tab-panel-special" class="space-y-6 hidden">
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center space-x-3">
+                    <span class="w-2.5 h-6 bg-purple-500 rounded-full"></span>
+                    <h3 class="text-xl font-bold text-gray-900">Special Event Services</h3>
+                </div>
+                <button id="add-special-service" type="button" 
+                    class="bg-purple-50 text-purple-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-purple-100 transition flex items-center space-x-1.5">
+                    <span>+ Add Special Event</span>
+                </button>
+            </div>
+
+            <div id="special-services-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{#each specials}}
+                <div class="special-row bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4 relative">
+                    <button type="button" 
+                        class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition" 
+                        onclick="this.parentElement.remove()" title="Remove Service">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Event / Service Name</label>
+                            <input type="text" placeholder="e.g. Night of Worship" value="{{this.specialProgram}}" 
+                                class="name-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-semibold text-gray-800">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Attendance</label>
+                            <input type="number" placeholder="Total" value="{{this.total}}" 
+                                class="total-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-bold text-gray-900">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100/55">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Comments</label>
+                            <input type="text" placeholder="General comments" value="{{this.comments}}" 
+                                class="comments-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Testimonies</label>
+                            <input type="text" placeholder="Special testimonies" value="{{this.testimony}}" 
+                                class="testimony-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+
+            <!-- Empty State for Special events -->
+            <div id="specials-empty-state" class="hidden text-center py-12 text-gray-400 font-medium">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                No special programs logged for this month. Click "+ Add Special Event" above to record one.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        // Toggle tab panels
+        document.getElementById('tab-panel-sunday').classList.add('hidden');
+        document.getElementById('tab-panel-weekday').classList.add('hidden');
+        document.getElementById('tab-panel-special').classList.add('hidden');
+        document.getElementById('tab-panel-' + tab).classList.remove('hidden');
+
+        // Reset tab buttons style
+        const tabs = ['sunday', 'weekday', 'special'];
+        tabs.forEach(t => {
+            const btn = document.getElementById('tab-btn-' + t);
+            btn.className = "flex-1 py-3 text-center text-sm font-bold rounded-xl transition flex items-center justify-center space-x-2 text-gray-500 hover:text-gray-950";
+        });
+
+        // Set active tab button style
+        const activeBtn = document.getElementById('tab-btn-' + tab);
+        activeBtn.className = "flex-1 py-3 text-center text-sm font-bold rounded-xl transition flex items-center justify-center space-x-2 bg-white text-gray-900 shadow-sm";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const attendanceCards = document.querySelectorAll('.attendance-card');
+        const specialsContainer = document.getElementById('special-services-container');
+
+        // Calculates sum of inputs, real-time KPI metrics
+        const updateAllMetrics = () => {
+            let grandTotal = 0;
+            let sundayTotal = 0;
+            let sundayCount = 0;
+            let totalMale = 0;
+            let totalFemale = 0;
+            let totalChild = 0;
+
+            // 1. Calculate Sunday Totals & Splits
+            attendanceCards.forEach(card => {
+                const male = parseInt(card.querySelector('.male-input').value) || 0;
+                const female = parseInt(card.querySelector('.female-input').value) || 0;
+                const child = parseInt(card.querySelector('.child-input').value) || 0;
+                const total = male + female + child;
+
+                card.querySelector('.row-total').textContent = total.toLocaleString();
+
+                grandTotal += total;
+                sundayTotal += total;
+                if (total > 0) sundayCount++;
+
+                totalMale += male;
+                totalFemale += female;
+                totalChild += child;
+            });
+
+            // 2. Calculate Mid-Week Totals
+            document.querySelectorAll('.weekday-row').forEach(row => {
+                const total = parseInt(row.querySelector('.total-input').value) || 0;
+                grandTotal += total;
+            });
+
+            // 3. Calculate Special Program Totals
+            const specials = document.querySelectorAll('.special-row');
+            specials.forEach(row => {
+                const total = parseInt(row.querySelector('.total-input').value) || 0;
+                grandTotal += total;
+            });
+
+            // Update DOM KPIs
+            document.getElementById('kpi-total-headcount').textContent = grandTotal.toLocaleString();
+            document.getElementById('kpi-avg-sunday').textContent = sundayCount > 0 ? Math.round(sundayTotal / sundayCount).toLocaleString() : '0';
+            document.getElementById('kpi-split-male').textContent = totalMale.toLocaleString();
+            document.getElementById('kpi-split-female').textContent = totalFemale.toLocaleString();
+            document.getElementById('kpi-split-child').textContent = totalChild.toLocaleString();
+            document.getElementById('kpi-specials-count').textContent = specials.length.toString();
+
+            // Toggle empty state for specials tab
+            const emptyState = document.getElementById('specials-empty-state');
+            if (emptyState) {
+                if (specials.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+            }
+        };
+
+        // Attach listeners to update metrics on the fly
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('.male-input, .female-input, .child-input, .total-input')) {
+                updateAllMetrics();
+            }
+        });
+
+        // Add Special Service Functionality
+        const addSpecialBtn = document.getElementById('add-special-service');
+        if (addSpecialBtn && specialsContainer) {
+            addSpecialBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const newRow = document.createElement('div');
+                newRow.className = 'special-row bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4 relative';
+                newRow.innerHTML = `
+                    <button type="button" 
+                        class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition" 
+                        onclick="this.parentElement.remove(); document.dispatchEvent(new Event('specialRowRemoved'));" title="Remove Service">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Event / Service Name</label>
+                            <input type="text" placeholder="e.g. Night of Worship" 
+                                class="name-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-semibold text-gray-800">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Attendance</label>
+                            <input type="number" placeholder="Total" 
+                                class="total-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-bold text-gray-900">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100/55">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Comments</label>
+                            <input type="text" placeholder="General comments" 
+                                class="comments-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Testimonies</label>
+                            <input type="text" placeholder="Special testimonies" 
+                                class="testimony-input w-full bg-white border border-gray-150 shadow-sm rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                        </div>
+                    </div>
+                `;
+                specialsContainer.appendChild(newRow);
+                updateAllMetrics();
+            });
+        }
+
+        // Listen for row removal updates
+        document.addEventListener('specialRowRemoved', () => {
+            updateAllMetrics();
+        });
+
+        // Initialize KPIs on page load
+        updateAllMetrics();
+
+        // Save All Button Event Listener
+        const saveBtn = document.getElementById('save-attendance-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                saveBtn.disabled = true;
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg> Saving...`;
+
+                try {
+                    const monthVal = document.getElementById('attendance-month').value;
+
+                    // Sundays Serialization
+                    const sundays = [];
+                    attendanceCards.forEach(card => {
+                        const weekNumber = card.dataset.week;
+                        sundays.push({
+                            weekNumber,
+                            male: card.querySelector('.male-input').value,
+                            female: card.querySelector('.female-input').value,
+                            child: card.querySelector('.child-input').value,
+                            specialProgram: card.querySelector('.theme-input').value,
+                            comments: card.querySelector('.comments-input').value,
+                            testimony: card.querySelector('.testimony-input').value
+                        });
+                    });
+
+                    // Weekdays Serialization
+                    const weekdays = [];
+                    document.querySelectorAll('.weekday-row').forEach(row => {
+                        const weekNumber = row.dataset.week;
+                        weekdays.push({
+                            weekNumber,
+                            total: row.querySelector('.total-input').value,
+                            specialProgram: row.querySelector('.theme-input').value,
+                            comments: row.querySelector('.comments-input').value,
+                            testimony: row.querySelector('.testimony-input').value
+                        });
+                    });
+
+                    // Specials Serialization
+                    const specials = [];
+                    document.querySelectorAll('.special-row').forEach(row => {
+                        const specialProgram = row.querySelector('.name-input').value;
+                        if (specialProgram) {
+                            specials.push({
+                                specialProgram,
+                                total: row.querySelector('.total-input').value,
+                                comments: row.querySelector('.comments-input').value,
+                                testimony: row.querySelector('.testimony-input').value
+                            });
+                        }
+                    });
+
+                    const response = await fetch('/attendance/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ month: monthVal, sundays, weekdays, specials })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // Toast alert instead of ugly browser alert
+                        const toast = document.createElement('div');
+                        toast.className = "fixed bottom-5 right-5 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-2xl z-[1000] transition transform translate-y-10 opacity-0";
+                        toast.textContent = "Attendance records saved successfully!";
+                        document.body.appendChild(toast);
+                        
+                        // Trigger CSS animation reflow
+                        setTimeout(() => {
+                            toast.classList.remove('translate-y-10', 'opacity-0');
+                        }, 100);
+
+                        setTimeout(() => {
+                            toast.classList.add('translate-y-10', 'opacity-0');
+                            setTimeout(() => toast.remove(), 500);
+                        }, 3000);
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('An error occurred while saving.');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalText;
+                }
+            });
+        }
+    });
+</script>

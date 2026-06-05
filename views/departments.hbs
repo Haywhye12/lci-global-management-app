@@ -1,0 +1,104 @@
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Departments</h2>
+            <p class="text-gray-500 mt-1">Manage church units, rosters, and departmental leadership.</p>
+        </div>
+        <!-- Only Admins/Pastors should create departments (can be restricted in UI or route) -->
+        <button onclick="document.getElementById('create-dept-modal').classList.remove('hidden')" class="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">+ Create Department</button>
+    </div>
+
+    {{#if success}}
+    <div class="bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 font-medium">
+        {{success}}
+    </div>
+    {{/if}}
+
+    {{#if error}}
+    <div class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 font-medium">
+        {{error}}
+    </div>
+    {{/if}}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{#each departments}}
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition group">
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 bg-gray-50 text-primary rounded-2xl flex items-center justify-center font-bold text-xl group-hover:bg-primary group-hover:text-white transition">
+                    {{initials name}}
+                </div>
+                <button class="text-gray-300 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">{{name}}</h3>
+            <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{description}}</p>
+            
+            <div class="mt-6 pt-6 border-t border-gray-50">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Head of Department</p>
+                {{#if Head}}
+                <div class="flex items-center space-x-3">
+                    <img class="h-8 w-8 rounded-full object-cover border border-gray-100" src="{{Head.profilePicture}}" alt="">
+                    <span class="text-sm font-bold text-gray-700">{{Head.fullName}}</span>
+                </div>
+                {{else}}
+                <div class="flex items-center space-x-3">
+                    <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">?</div>
+                    <span class="text-sm font-medium text-gray-400 italic">Not Assigned</span>
+                </div>
+                {{/if}}
+            </div>
+
+            <div class="mt-6 flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-gray-500 text-sm font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>{{memberCount}} Members</span>
+                </div>
+                <a href="/departments/{{id}}" class="text-sm font-bold text-primary hover:underline">Manage</a>
+            </div>
+        </div>
+        {{/each}}
+
+        {{#unless departments}}
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm opacity-60">
+            <h3 class="text-xl font-bold text-gray-400 italic">No Departments Found</h3>
+            <p class="text-sm text-gray-300 mt-2">Start by creating the first unit for this installation.</p>
+        </div>
+        {{/unless}}
+    </div>
+
+    <!-- Create Department Modal -->
+    <div id="create-dept-modal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold">Create New Department</h3>
+                <button type="button" onclick="document.getElementById('create-dept-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form action="/departments/create" method="POST" class="p-8 space-y-5">
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Department Name</label>
+                    <input type="text" name="name" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm"></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-gray-700 ml-1">Assign Head of Department (Optional)</label>
+                    <select name="headId" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition shadow-sm">
+                        <option value="">-- Leave Unassigned --</option>
+                        {{#each users}}
+                        <option value="{{id}}">{{fullName}} ({{role}})</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="pt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="document.getElementById('create-dept-modal').classList.add('hidden')" class="px-6 py-3 font-bold text-gray-500">Cancel</button>
+                    <button type="submit" class="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Create Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

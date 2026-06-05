@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCI Management - {{title}}</title>
+    <meta name="description" content="Leaders' Church International — Branch Management Portal">
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a365d',
+                        secondary: '#2d3748',
+                        accent: '#ed8936',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Outfit', sans-serif; }
+
+        /* Sidebar smooth transitions */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s; }
+        #sidebar-overlay { transition: opacity 0.3s ease; }
+
+        /* Active nav item highlight */
+        .sidebar-link { position: relative; transition: all 0.15s ease; }
+        .sidebar-link.active { background: rgba(255,255,255,0.12); font-weight: 700; }
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: #ed8936;
+            border-radius: 0 3px 3px 0;
+        }
+        .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+
+        /* Scrollbar styling for sidebar */
+        #sidebar-nav::-webkit-scrollbar { width: 4px; }
+        #sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        #sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+        /* Content area shift on desktop */
+        @media (min-width: 1024px) {
+            #main-content { margin-left: 260px; }
+        }
+
+        /* Micro-animation for icons */
+        .sidebar-link svg { transition: transform 0.2s ease; }
+        .sidebar-link:hover svg { transform: scale(1.1); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+
+    <!-- ── Sidebar Overlay (mobile) ── -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 lg:hidden" onclick="closeSidebar()"></div>
+
+    <!-- ══════════════════ SIDEBAR ══════════════════ -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 z-50 flex flex-col
+        bg-gradient-to-b from-[#1a365d] via-[#1e3f6e] to-[#152c4e]
+        shadow-2xl -translate-x-full lg:translate-x-0">
+
+        <!-- Logo / Brand Header -->
+        <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10 flex-shrink-0">
+            <img src="{{#if tenant.logoUrl}}{{tenant.logoUrl}}{{else}}/images/logo.jpg{{/if}}"
+                 alt="LCI Logo"
+                 class="w-10 h-10 rounded-xl object-contain bg-white/10 p-1 flex-shrink-0">
+            <div class="min-w-0">
+                <h1 class="text-white font-extrabold text-sm leading-tight tracking-tight truncate">Leaders' Church</h1>
+                <p class="text-blue-300 text-[10px] font-semibold truncate">{{installation.name}}</p>
+            </div>
+            <!-- Close button (mobile only) -->
+            <button onclick="closeSidebar()" class="lg:hidden ml-auto text-white/50 hover:text-white flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Tenant / Branch badge -->
+        {{#if isViewingAs}}
+        <div class="mx-4 mt-3 flex items-center justify-between bg-accent/20 border border-accent/30 rounded-xl px-3 py-2">
+            <span class="text-accent text-xs font-bold truncate">👁 {{installation.name}}</span>
+            <a href="/superadmin/switch-installation/clear" class="text-accent/60 hover:text-accent ml-2 flex-shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </a>
+        </div>
+        {{/if}}
+
+        <!-- Navigation Links -->
+        <nav id="sidebar-nav" class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+
+            <!-- Main -->
+            <p class="text-[9px] font-extrabold uppercase tracking-[0.15em] text-blue-300/50 px-3 pt-2 pb-1.5">Main</p>
+
+            {{#if (eq user.role 'superadmin')}}
+            <a href="/superadmin/installations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/superadmin/installations')}}active{{/if}}">
+                <svg class="w-4.5 h-4.5 flex-shrink-0 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                All Branches
+            </a>
+            {{/if}}
+
+            <a href="/" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+
+            <!-- People -->
+            <p class="text-[9px] font-extrabold uppercase tracking-[0.15em] text-blue-300/50 px-3 pt-4 pb-1.5">People</p>
+
+            <a href="/people" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/people')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                Members & Staff
+            </a>
+
+            <a href="/care" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/care')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                Member Care
+            </a>
+
+            <a href="/departments" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/departments')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Departments
+            </a>
+
+            <!-- Services -->
+            <p class="text-[9px] font-extrabold uppercase tracking-[0.15em] text-blue-300/50 px-3 pt-4 pb-1.5">Services</p>
+
+            <a href="/attendance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/attendance')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                Attendance Log
+            </a>
+
+
+            <a href="/events" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/events')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Events
+            </a>
+
+            <a href="/media" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/media')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                Media Library
+            </a>
+
+            <a href="/library" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/library')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                Books & Feed
+            </a>
+
+            <!-- Finance -->
+            <p class="text-[9px] font-extrabold uppercase tracking-[0.15em] text-blue-300/50 px-3 pt-4 pb-1.5">Finance</p>
+
+            <a href="/finance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/finance')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                Weekly Finance
+            </a>
+
+            <a href="/finance/ledger" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/finance/ledger')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Ledger & Budget
+            </a>
+
+            <!-- Reporting -->
+            <p class="text-[9px] font-extrabold uppercase tracking-[0.15em] text-blue-300/50 px-3 pt-4 pb-1.5">Reporting</p>
+
+            <a href="/reports" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/reports')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Weekly Reports
+            </a>
+
+            <a href="/export" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/export')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export Reports
+            </a>
+
+            {{#if (hasRole user.role 'superadmin,pastor,global_auditor')}}
+            <a href="/audit" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 {{#if (eq path '/audit')}}active{{/if}}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Audit Log
+            </a>
+            {{/if}}
+
+        </nav>
+
+        <!-- User Profile Footer -->
+        <div class="border-t border-white/10 p-4 flex items-center gap-3 flex-shrink-0">
+            <a href="/profile" class="relative flex-shrink-0">
+                <img class="h-9 w-9 rounded-full object-cover border-2 border-white/20 hover:border-accent transition"
+                     src="{{user.profilePicture}}"
+                     alt="Profile">
+                <span class="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#1a365d]"></span>
+            </a>
+            <div class="flex-1 min-w-0">
+                <p class="text-white text-xs font-bold truncate leading-tight">{{user.fullName}}</p>
+                <p class="text-blue-300 text-[10px] uppercase tracking-wider truncate">{{user.role}}</p>
+            </div>
+            <a href="/auth/logout" title="Logout"
+               class="flex-shrink-0 text-blue-300/60 hover:text-red-400 transition p-1.5 rounded-lg hover:bg-white/10">
+                <svg class="w-4.5 h-4.5 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ══════════════════ MAIN AREA ══════════════════ -->
+    <div id="main-content" class="flex flex-col min-h-screen">
+
+        <!-- Top Bar (Mobile hamburger + page breadcrumb) -->
+        <header class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+            <div class="flex items-center justify-between h-14 px-4 md:px-6">
+                <!-- Hamburger (mobile only) -->
+                <button onclick="openSidebar()" class="lg:hidden p-2 -ml-1 rounded-xl text-gray-400 hover:text-primary hover:bg-gray-100 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+
+                <!-- Page Title / Breadcrumb -->
+                <div class="flex items-center gap-2 text-sm font-semibold text-gray-500">
+                    <span class="hidden sm:inline text-gray-300">/</span>
+                    <span class="text-gray-900 font-bold">{{title}}</span>
+                </div>
+
+                <!-- Right side: tenant currency tag + profile -->
+                <div class="flex items-center gap-3">
+                    {{#if currencyCode}}
+                    <span class="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-full">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                        {{currencyCode}}
+                    </span>
+                    {{/if}}
+                    <a href="/profile" class="relative block">
+                        <img class="h-8 w-8 rounded-full object-cover border-2 border-gray-100 hover:border-primary transition"
+                             src="{{user.profilePicture}}" alt="Profile">
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Body -->
+        <main class="flex-grow px-4 md:px-6 py-7">
+            {{{body}}}
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-100 bg-white py-4 px-6">
+            <p class="text-center text-gray-400 text-xs">
+                &copy; 2026 Leaders' Church International &mdash; All Rights Reserved.
+                <span class="text-gray-300 mx-1">|</span>
+                {{#if tenant.name}}Branch: <strong class="text-gray-500">{{tenant.name}}</strong>{{/if}}
+            </p>
+        </footer>
+    </div>
+
+    <!-- Sidebar JS -->
+    <script>
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        }
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+    </script>
+</body>
+</html>
