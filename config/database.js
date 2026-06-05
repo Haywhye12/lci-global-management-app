@@ -14,6 +14,17 @@ if (process.env.MYSQL_URL) {
             idle: 10000
         }
     });
+} else if (process.env.MYSQL_PUBLIC_URL) {
+    sequelize = new Sequelize(process.env.MYSQL_PUBLIC_URL, {
+        dialect: 'mysql',
+        logging: false,
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000
+        }
+    });
 } else if (process.env.DATABASE_URL) {
     sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: 'mysql',
@@ -26,8 +37,9 @@ if (process.env.MYSQL_URL) {
         }
     });
 } else if (process.env.MYSQLHOST) {
+    const dbName = process.env.MYSQL_DATABASE || process.env.MYSQLDATABASE || 'railway';
     sequelize = new Sequelize(
-        process.env.MYSQLDATABASE,
+        dbName,
         process.env.MYSQLUSER,
         process.env.MYSQLPASSWORD,
         {

@@ -76,7 +76,6 @@ async function seed() {
 
         // 2. Create Users with RBAC Roles
         const pHash = await bcrypt.hash('admin123', 10);
-        const pastorHash = await bcrypt.hash('pastor123', 10);
 
         // Super Admin (Global)
         const superadmin = await User.create({
@@ -87,58 +86,6 @@ async function seed() {
             installationId: hq.id
         });
 
-        // Global Auditor
-        const auditor = await User.create({
-            fullName: 'Global Auditor',
-            email: 'auditor@leaderschurchglobal.org',
-            password: pHash,
-            role: 'global_auditor',
-            installationId: hq.id
-        });
-
-        // Tech Support
-        const tech = await User.create({
-            fullName: 'Tech Support Team',
-            email: 'tech@leaderschurchglobal.org',
-            password: pHash,
-            role: 'tech_support',
-            installationId: hq.id
-        });
-
-        // Lagos Branch Admin / Pastor
-        const lagosPastor = await User.create({
-            fullName: 'Pastor Ayomide Bobani',
-            email: 'ayomidebobani@gmail.com',
-            password: pastorHash,
-            role: 'pastor',
-            installationId: lagos.id,
-            profilePicture: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-        });
-
-        const lagosSecretary = await User.create({
-            fullName: 'Sister Sarah Jenkins',
-            email: 'sarah@leaderschurchglobal.org',
-            password: pHash,
-            role: 'secretary',
-            installationId: lagos.id
-        });
-
-        const lagosFinance = await User.create({
-            fullName: 'Brother David Cole',
-            email: 'finance@leaderschurchglobal.org',
-            password: pHash,
-            role: 'finance_officer',
-            installationId: lagos.id
-        });
-
-        const lagosHOD = await User.create({
-            fullName: 'Deacon John Doe',
-            email: 'hod@leaderschurchglobal.org',
-            password: pHash,
-            role: 'hod',
-            installationId: lagos.id
-        });
-
         console.log('Created Users.');
 
         // 3. Create Departments in Lagos
@@ -146,18 +93,15 @@ async function seed() {
             name: 'LCI Choir',
             description: 'Leaders Church International branch choir and worship team.',
             installationId: lagos.id,
-            headId: lagosHOD.id
+            headId: null
         });
 
         const ushering = await Department.create({
             name: 'Ushering Department',
             description: 'Ushers and protocol officers assisting during services.',
             installationId: lagos.id,
-            headId: lagosHOD.id
+            headId: null
         });
-
-        await DepartmentMembership.create({ role: 'Head', userId: lagosHOD.id, departmentId: choir.id });
-        await DepartmentMembership.create({ role: 'Head', userId: lagosHOD.id, departmentId: ushering.id });
 
         console.log('Created Departments.');
 
@@ -306,8 +250,8 @@ async function seed() {
             notes: 'First week of May reports.',
             isLate: false,
             version: 1,
-            submittedById: lagosSecretary.id,
-            pastorId: lagosPastor.id,
+            submittedById: null,
+            pastorId: null,
             installationId: lagos.id
         });
 
@@ -318,7 +262,7 @@ async function seed() {
             notes: 'Second week of May reports.',
             isLate: true, // Flagged late
             version: 1,
-            submittedById: lagosSecretary.id,
+            submittedById: null,
             installationId: lagos.id
         });
 
@@ -370,7 +314,7 @@ async function seed() {
             title: 'Welcome to our New Library and Feed!',
             content: 'Dear Lagos branch members, we are excited to launch our E-Books Library and Community Feed! You can now download PDFs uploaded by pastors, and post updates, sermon notes, testimonies, or encouragement items right here.',
             authorName: 'Pastor Ayomide Bobani',
-            userId: lagosPastor.id,
+            userId: null,
             installationId: lagos.id
         });
 
@@ -378,7 +322,7 @@ async function seed() {
             title: 'Youth Fire Conference 2026 Registration Open',
             content: 'Register for the upcoming Youth Fire Conference today. Let us prepare for supernatural transformation and empowerment.',
             authorName: 'Sister Sarah Jenkins',
-            userId: lagosSecretary.id,
+            userId: null,
             installationId: lagos.id
         });
 
@@ -387,7 +331,7 @@ async function seed() {
             content: 'Blessed to see such amazing growth in our ushering team training session today! Moving from strength to strength.',
             imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=400&h=250',
             authorName: 'Deacon John Doe',
-            userId: lagosHOD.id,
+            userId: null,
             installationId: lagos.id
         });
 
@@ -395,7 +339,7 @@ async function seed() {
             content: 'Reminder: Midweek Miracle Service starts by 6:00 PM this Wednesday. Come expectant and bring a friend! 🙏✨',
             imageUrl: null,
             authorName: 'Pastor Ayomide Bobani',
-            userId: lagosPastor.id,
+            userId: null,
             installationId: lagos.id
         });
 
@@ -403,10 +347,6 @@ async function seed() {
 
         console.log('--- LOGIN DETAILS ---');
         console.log('Super Admin: hailstormnews@gmail.com / admin123');
-        console.log('Pastor/Branch Admin (Lagos): ayomidebobani@gmail.com / pastor123');
-        console.log('Secretary (Lagos): sarah@leaderschurchglobal.org / admin123');
-        console.log('Finance Officer (Lagos): finance@leaderschurchglobal.org / admin123');
-        console.log('HOD (Lagos): hod@leaderschurchglobal.org / admin123');
         console.log('---------------------');
         process.exit(0);
     } catch (err) {
