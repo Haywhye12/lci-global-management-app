@@ -52,12 +52,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const sessionStore = new SequelizeStore({
+    db: sequelize,
+    tableName: 'Sessions',
+    checkExpirationInterval: 15 * 60 * 1000, // Cleanup expired sessions every 15 minutes
+    expiration: 24 * 60 * 60 * 1000 // Sessions expire in 24 hours
+});
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false } // Set to true if using HTTPS
 }));
+
+// Sync the session store table
+sessionStore.sync();
 
 // Dynamically set session cookie domain to share session across tenant subdomains
 app.use((req, res, next) => {
