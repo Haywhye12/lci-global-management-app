@@ -8,7 +8,8 @@ const {
     sequelize, Installation, User, Department, Member,
     Attendance, Finance, Transaction, Budget, WeeklyReport,
     ReportSnapshot, FirstTimer, FollowUp, DutyRoster,
-    Event, EventRegistration, MediaItem, AuditLog, MemberAttendance, DashboardPost
+    Event, EventRegistration, MediaItem, AuditLog, MemberAttendance, DashboardPost,
+    MemberTransfer, DepartmentMembership, DepartmentReport, TrainingLog, EventVolunteer, NotificationLog, Book, BranchPost
 } = require('./models');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
@@ -120,7 +121,9 @@ app.get('/superadmin/installations', isAuthenticated, authorize('superadmin'), a
 
         res.render('superadmin-dashboard', { 
             title: 'All Installations Overview', 
-            installations: instData 
+            installations: instData,
+            success: req.query.success,
+            error: req.query.error
         });
     } catch (err) {
         console.error(err);
@@ -132,7 +135,7 @@ app.post('/superadmin/installations/create', isAuthenticated, authorize('superad
     try {
         const { name, location, status } = req.body;
         await Installation.create({ name, location, status });
-        res.redirect('/superadmin/installations');
+        res.redirect('/superadmin/installations?success=Installation created successfully');
     } catch (err) {
         console.error(err);
         res.redirect('/superadmin/installations?error=Failed to create installation');
@@ -156,6 +159,174 @@ app.get('/superadmin/switch-installation/:id', isAuthenticated, authorize('super
     } catch (err) {
         console.error(err);
         res.redirect('/superadmin/installations');
+    }
+});
+
+app.post('/superadmin/installations/:id/delete', isAuthenticated, authorize('superadmin'), async (req, res) => {
+    const { id } = req.params;
+    
+    // Safety check: Cannot delete your own assigned installation
+    if (id === req.session.user.installationId) {
+        return res.redirect('/superadmin/installations?error=You cannot delete the installation to which your admin account belongs.');
+    }
+    
+    const transaction = await sequelize.transaction();
+    try {
+        const inst = await Installation.findByPk(id);
+        if (!inst) {
+            await transaction.rollback();
+            return res.redirect('/superadmin/installations?error=Installation not found');
+        }
+        
+        // Fetch child record IDs
+        const userIds = (await User.findAll({ where: { installationId: id }, attributes: ['id'] })).map(u => u.id);
+        const memberIds = (await Member.findAll({ where: { installationId: id }, attributes: ['id'] })).map(m => m.id);
+        const departmentIds = (await Department.findAll({ where: { installationId: id }, attributes: ['id'] })).map(d => d.id);
+        const reportIds = (await WeeklyReport.findAll({ where: { installationId: id }, attributes: ['id'] })).map(r => r.id);
+        const firstTimerIds = (await FirstTimer.findAll({ where: { installationId: id }, attributes: ['id'] })).map(f => f.id);
+        const eventIds = (await Event.findAll({ where: { installationId: id }, attributes: ['id'] })).map(e => e.id);
+        
+        // Helper to check and execute dynamic deletes to avoid dialect empty-array error
+        const deleteOrCondition = async (model, fieldsMap) => {
+            const orConditions = [];
+            for (const [field, ids] of Object.entries(fieldsMap)) {
+                if (ids && ids.length > 0) {
+                    orConditions.push({ [field]: ids });
+                }
+            }
+            if (orConditions.length > 0) {
+                await model.destroy({ where: { [Op.or]: orConditions }, transaction });
+            }
+        };
+        
+        // 1. FollowUp
+        await deleteOrCondition(FollowUp, { firstTimerId: firstTimerIds, memberId: memberIds, userId: userIds });
+        
+        // 2. FirstTimer
+        await FirstTimer.destroy({ where: { installationId: id }, transaction });
+        
+        // 3. EventRegistration
+        await deleteOrCondition(EventRegistration, { eventId: eventIds, memberId: memberIds, userId: userIds });
+        
+        // 4. EventVolunteer
+        await deleteOrCondition(EventVolunteer, { eventId: eventIds, memberId: memberIds, userId: userIds });
+        
+        // 5. Event
+        await Event.destroy({ where: { installationId: id }, transaction });
+        
+        // 6. MemberAttendance
+        const memberAttOr = [{ installationId: id }];
+        if (memberIds.length > 0) memberAttOr.push({ memberId: memberIds });
+        await MemberAttendance.destroy({ where: { [Op.or]: memberAttOr }, transaction });
+        
+        // 7. MemberTransfer
+        const transferOr = [{ sourceInstallationId: id }, { destinationInstallationId: id }];
+        if (memberIds.length > 0) transferOr.push({ memberId: memberIds });
+        if (userIds.length > 0) transferOr.push({ requestedById: userIds });
+        await MemberTransfer.destroy({ where: { [Op.or]: transferOr }, transaction });
+        
+        // 8. Member
+        await Member.destroy({ where: { installationId: id }, transaction });
+        
+        // 9. ReportSnapshot
+        const snapshotOr = [];
+        if (reportIds.length > 0) snapshotOr.push({ reportId: reportIds });
+        if (userIds.length > 0) snapshotOr.push({ changedById: userIds });
+        if (snapshotOr.length > 0) {
+            await ReportSnapshot.destroy({ where: { [Op.or]: snapshotOr }, transaction });
+        }
+        
+        // 10. WeeklyReport
+        const reportOr = [{ installationId: id }];
+        if (userIds.length > 0) {
+            reportOr.push({ submittedById: userIds });
+            reportOr.push({ pastorId: userIds });
+        }
+        await WeeklyReport.destroy({ where: { [Op.or]: reportOr }, transaction });
+        
+        // 11. DepartmentReport
+        const deptRepOr = [];
+        if (departmentIds.length > 0) deptRepOr.push({ departmentId: departmentIds });
+        if (userIds.length > 0) deptRepOr.push({ submittedById: userIds });
+        if (deptRepOr.length > 0) {
+            await DepartmentReport.destroy({ where: { [Op.or]: deptRepOr }, transaction });
+        }
+        
+        // 12. DepartmentMembership
+        const membershipOr = [];
+        if (departmentIds.length > 0) membershipOr.push({ departmentId: departmentIds });
+        if (userIds.length > 0) membershipOr.push({ userId: userIds });
+        if (membershipOr.length > 0) {
+            await DepartmentMembership.destroy({ where: { [Op.or]: membershipOr }, transaction });
+        }
+        
+        // 13. Department
+        await Department.destroy({ where: { installationId: id }, transaction });
+        
+        // 14. TrainingLog
+        if (userIds.length > 0) {
+            await TrainingLog.destroy({ where: { userId: userIds }, transaction });
+        }
+        
+        // 15. DutyRoster
+        const rosterOr = [{ installationId: id }];
+        if (userIds.length > 0) rosterOr.push({ userId: userIds });
+        await DutyRoster.destroy({ where: { [Op.or]: rosterOr }, transaction });
+        
+        // 16. BranchPost
+        const bPostOr = [{ installationId: id }];
+        if (userIds.length > 0) bPostOr.push({ userId: userIds });
+        await BranchPost.destroy({ where: { [Op.or]: bPostOr }, transaction });
+        
+        // 17. DashboardPost
+        const dPostOr = [{ installationId: id }];
+        if (userIds.length > 0) dPostOr.push({ userId: userIds });
+        await DashboardPost.destroy({ where: { [Op.or]: dPostOr }, transaction });
+        
+        // 18. Book
+        const bookOr = [{ installationId: id }];
+        if (userIds.length > 0) bookOr.push({ uploadedBy: userIds });
+        await Book.destroy({ where: { [Op.or]: bookOr }, transaction });
+        
+        // 19. AuditLog
+        const auditOr = [{ installationId: id }];
+        if (userIds.length > 0) auditOr.push({ userId: userIds });
+        await AuditLog.destroy({ where: { [Op.or]: auditOr }, transaction });
+        
+        // 20. NotificationLog
+        await NotificationLog.destroy({ where: { installationId: id }, transaction });
+        
+        // 21. Transaction
+        await Transaction.destroy({ where: { installationId: id }, transaction });
+        
+        // 22. Budget
+        await Budget.destroy({ where: { installationId: id }, transaction });
+        
+        // 23. Finance
+        await Finance.destroy({ where: { installationId: id }, transaction });
+        
+        // 24. Attendance
+        await Attendance.destroy({ where: { installationId: id }, transaction });
+        
+        // 25. User
+        await User.destroy({ where: { installationId: id }, transaction });
+        
+        // 26. Installation
+        await inst.destroy({ transaction });
+        
+        await transaction.commit();
+        
+        // Clear switched session if it was the deleted installation
+        if (req.session.selectedInstallationId === id) {
+            delete req.session.selectedInstallationId;
+            delete req.session.selectedInstallationName;
+        }
+        
+        res.redirect('/superadmin/installations?success=Installation deleted successfully');
+    } catch (err) {
+        await transaction.rollback();
+        console.error('Failed to delete installation:', err);
+        res.redirect(`/superadmin/installations?error=Failed to delete installation: ${err.message}`);
     }
 });
 
