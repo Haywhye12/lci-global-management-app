@@ -3,7 +3,10 @@ const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         // Multi-tenant subdomain isolation
         if (!['superadmin', 'global_auditor', 'tech_support'].includes(req.session.user.role)) {
-            if (req.tenant && req.session.user.installationId !== req.tenant.id) {
+            const isAccessingWrongTenantSubdomain = req.isTenantResolvedBySubdomain && req.tenant && req.session.user.installationId !== req.tenant.id;
+            const isUserOnMainDomain = !req.isTenantResolvedBySubdomain;
+
+            if (isAccessingWrongTenantSubdomain || isUserOnMainDomain) {
                 const targetSubdomain = req.session.user.installationSubdomain;
                 if (targetSubdomain) {
                     const host = req.headers.host || '';
@@ -16,20 +19,27 @@ const isAuthenticated = (req, res, next) => {
                     }
                     return res.redirect(`${req.protocol}://${targetSubdomain}.${mainDomain}${req.originalUrl}`);
                 }
-                return res.status(403).render('error', { 
-                    message: 'Access Denied: You do not have permission to access this branch portal.' 
-                });
+
+                // If accessing another branch's subdomain directly, deny access
+                if (isAccessingWrongTenantSubdomain) {
+                    return res.status(403).render('error', { 
+                        message: 'Access Denied: You do not have permission to access this branch portal.' 
+                    });
+                }
+                
+                // If they are on the main domain (e.g. admins.leaderschurchinternational.org) and have no subdomain,
+                // we allow them to access it using the main domain.
             }
         }
 
         // Determine active installation ID
         const activeInstId = (req.session.user.role === 'superadmin' && req.session.selectedInstallationId) 
             ? req.session.selectedInstallationId 
-            : (req.tenant ? req.tenant.id : req.session.user.installationId);
+            : (req.isTenantResolvedBySubdomain && req.tenant ? req.tenant.id : req.session.user.installationId);
             
         const activeInstName = (req.session.user.role === 'superadmin' && req.session.selectedInstallationName)
             ? req.session.selectedInstallationName
-            : (req.tenant ? req.tenant.name : req.session.user.installationName);
+            : (req.isTenantResolvedBySubdomain && req.tenant ? req.tenant.name : req.session.user.installationName);
 
         req.activeInstallationId = activeInstId;
 

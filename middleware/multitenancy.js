@@ -13,12 +13,24 @@ module.exports = async (req, res, next) => {
 
     try {
         let tenant = null;
-        if (subdomain && subdomain !== 'www' && subdomain !== 'hq') {
-            tenant = await Installation.findOne({ where: { subdomain, status: 'active' } });
+        let isTenantResolvedBySubdomain = false;
+
+        if (subdomain && subdomain !== 'www') {
+            if (subdomain === 'hq') {
+                tenant = await Installation.findOne({ where: { subdomain: 'hq' } });
+                if (tenant) {
+                    isTenantResolvedBySubdomain = true;
+                }
+            } else {
+                tenant = await Installation.findOne({ where: { subdomain, status: 'active' } });
+                if (tenant) {
+                    isTenantResolvedBySubdomain = true;
+                }
+            }
         }
 
         if (!tenant) {
-            // Default to HQ branch if no subdomain is present
+            // Default to HQ branch if no subdomain is present or if it did not match any tenant
             tenant = await Installation.findOne({ where: { subdomain: 'hq' } });
             if (!tenant) {
                 // Absolute fallback to first active installation
@@ -27,6 +39,7 @@ module.exports = async (req, res, next) => {
         }
 
         req.tenant = tenant;
+        req.isTenantResolvedBySubdomain = isTenantResolvedBySubdomain;
         res.locals.tenant = tenant ? tenant.get({ plain: true }) : null;
 
         if (tenant) {
