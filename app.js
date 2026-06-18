@@ -76,7 +76,9 @@ app.use((req, res, next) => {
     const host = req.headers.host ? req.headers.host.split(':')[0] : '';
     if (host) {
         if (host === 'localhost' || host.endsWith('.localhost')) {
-            req.session.cookie.domain = '.localhost';
+            // Do not set session cookie domain to '.localhost' as modern browsers reject wildcard cookies on localhost.
+            // Leaving it undefined scopes the session cookie to the current exact host (e.g. lagos.localhost or localhost).
+            req.session.cookie.domain = undefined;
         } else if (host.endsWith('.up.railway.app')) {
             const match = host.match(/([a-zA-Z0-9\-]+)\.up\.railway\.app$/);
             if (match) {

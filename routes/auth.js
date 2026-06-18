@@ -7,8 +7,110 @@ const QRCode = require('qrcode');
 const { Op } = require('sequelize');
 const { User, Installation, AuditLog } = require('../models');
 
-// Render Login Page
-router.get('/login', (req, res) => {
+// Helper functions to encrypt/decrypt temporary cross-subdomain login tokens
+function encryptToken(data, secret) {
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(secret, 'salt', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
+
+function decryptToken(token, secret) {
+    try {
+        const algorithm = 'aes-256-cbc';
+        const key = crypto.scryptSync(secret, 'salt', 32);
+        const parts = token.split(':');
+        const iv = Buffer.from(parts.shift(), 'hex');
+        const encryptedText = parts.join(':');
+        const decipher = crypto.createDecipheriv(algorithm, key, iv);
+        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    } catch (err) {
+        return null;
+    }
+}
+
+function getSubdomainRedirectUrl(req, user) {
+    if (['superadmin', 'global_auditor', 'tech_support'].includes(user.role)) {
+        return null;
+    }
+
+    const targetSubdomain = user.Installation ? user.Installation.subdomain : null;
+    if (!targetSubdomain) {
+        return null;
+    }
+
+    const host = req.headers.host || '';
+    const parts = host.split(':')[0].split('.');
+    let currentSubdomain = null;
+    if (parts.length > 1 && parts[parts.length - 1] === 'localhost') {
+        currentSubdomain = parts[0];
+    } else if (parts.length > 2) {
+        currentSubdomain = parts[0];
+    }
+
+    if (currentSubdomain === targetSubdomain) {
+        return null;
+    }
+
+    let mainDomain = host;
+    const hostParts = host.split('.');
+    if (hostParts.length > 1 && hostParts[hostParts.length - 1].split(':')[0] === 'localhost') {
+        mainDomain = hostParts[hostParts.length - 1];
+    } else if (hostParts.length > 2) {
+        mainDomain = hostParts.slice(1).join('.');
+    }
+
+    const secret = process.env.SESSION_SECRET || 'lci_secret_key_2026';
+    const tokenData = {
+        userId: user.id,
+        expiresAt: Date.now() + 60 * 1000 // 1 minute expiration
+    };
+    const token = encryptToken(tokenData, secret);
+
+    return `${req.protocol}://${targetSubdomain}.${mainDomain}/auth/login?token=${token}`;
+}
+
+// Render Login Page / Handle Token Login
+router.get('/login', async (req, res) => {
+    const { token } = req.query;
+    if (token) {
+        const secret = process.env.SESSION_SECRET || 'lci_secret_key_2026';
+        const data = decryptToken(token, secret);
+        if (data && data.expiresAt > Date.now()) {
+            try {
+                const user = await User.findByPk(data.userId, { include: [Installation] });
+                if (user) {
+                    req.session.user = {
+                        id: user.id,
+                        fullName: user.fullName,
+                        email: user.email,
+                        role: user.role,
+                        profilePicture: user.profilePicture,
+                        installationId: user.installationId,
+                        installationName: user.Installation ? user.Installation.name : 'System',
+                        installationSubdomain: user.Installation ? user.Installation.subdomain : null
+                    };
+
+                    await AuditLog.create({
+                        action: 'LOGIN_SUCCESS',
+                        details: `User ${user.fullName} logged in via secure subdomain redirect.`,
+                        userId: user.id,
+                        installationId: user.installationId
+                    });
+
+                    return res.redirect('/');
+                }
+            } catch (err) {
+                console.error('Token login error:', err);
+            }
+        }
+    }
+
     if (req.session.user) return res.redirect('/');
     res.render('login', { layout: false, title: 'Login' });
 });
@@ -67,6 +169,12 @@ router.post('/login', async (req, res) => {
             return res.redirect('/auth/2fa/verify');
         }
 
+        // Check if user needs to be redirected to their subdomain
+        const redirectUrl = getSubdomainRedirectUrl(req, user);
+        if (redirectUrl) {
+            return res.redirect(redirectUrl);
+        }
+
         // Set Session
         req.session.user = {
             id: user.id,
@@ -121,6 +229,13 @@ router.post('/2fa/verify', async (req, res) => {
 
         // Logged in successfully
         delete req.session.pendingMfaUserId;
+
+        // Check if user needs to be redirected to their subdomain
+        const redirectUrl = getSubdomainRedirectUrl(req, user);
+        if (redirectUrl) {
+            return res.redirect(redirectUrl);
+        }
+
         req.session.user = {
             id: user.id,
             fullName: user.fullName,
