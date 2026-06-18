@@ -65,7 +65,10 @@ app.use(session({
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { 
+        secure: false,
+        maxAge: null // Session cookie (expires when browser is closed)
+    }
 }));
 
 // Sync the session store table
