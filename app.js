@@ -19,6 +19,7 @@ const exportRoutes = require('./routes/export');
 const careRoutes = require('./routes/care');
 const libraryRoutes = require('./routes/library');
 const attendanceRoutes = require('./routes/attendance');
+const churchRoutes = require('./routes/church');
 const { isAuthenticated, authorize } = require('./middleware/auth');
 const multitenancy = require('./middleware/multitenancy');
 require('dotenv').config();
@@ -115,6 +116,7 @@ app.use('/export', exportRoutes);
 app.use('/care', careRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/library', libraryRoutes);
+app.use('/church-details', churchRoutes);
 
 // Super Admin Routes
 app.get('/superadmin/installations', isAuthenticated, authorize('superadmin'), async (req, res) => {
