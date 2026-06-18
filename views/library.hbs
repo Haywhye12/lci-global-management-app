@@ -99,12 +99,19 @@
                         <p class="text-xs text-gray-500 line-clamp-2">{{this.description}}</p>
                     </div>
                     <!-- Actions -->
-                    <div class="pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <div class="pt-4 border-t border-gray-50 flex items-center justify-between gap-2">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{formatDate this.createdAt}}</span>
-                        <a href="{{this.pdfUrl}}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent transition">
-                            📖 Read Book
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                        </a>
+                        <div class="flex items-center gap-2">
+                            {{#if ../isUploader}}
+                            <button onclick="openEditBookModal('{{this.id}}', '{{this.title}}', '{{this.author}}', '{{this.description}}', '{{#if this.installationId}}false{{else}}true{{/if}}')" 
+                                    class="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:text-amber-700 transition">
+                                ✏️ Edit
+                            </button>
+                            {{/if}}
+                            <a href="{{this.pdfUrl}}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent transition">
+                                📖 Read
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -181,7 +188,82 @@
     </div>
 </div>
 
+<!-- Edit Book Modal -->
+<div id="edit-book-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl transform scale-95 transition-transform duration-200" id="edit-book-modal-card">
+        <div class="flex justify-between items-center pb-4 border-b border-gray-100">
+            <h3 class="text-lg font-bold text-gray-950">✏️ Edit Book Details</h3>
+            <button onclick="closeEditBookModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="edit-book-form" method="POST" enctype="multipart/form-data" class="space-y-4 mt-4">
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-700">Book Title *</label>
+                <input type="text" name="title" id="edit-book-title" required class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition text-sm">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-700">Author Name</label>
+                <input type="text" name="author" id="edit-book-author" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition text-sm">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-700">Scope Availability</label>
+                <select name="isGlobal" id="edit-book-scope" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition text-sm">
+                    <option value="false">Only This Branch ({{installation.name}})</option>
+                    <option value="true">Global (All branches can access)</option>
+                </select>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-700">Description</label>
+                <input type="text" name="description" id="edit-book-description" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition text-sm">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-700">Update PDF (Optional)</label>
+                    <input type="file" name="bookPdf" accept="application/pdf" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white hover:file:opacity-90 cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-700">Update Cover (Optional)</label>
+                    <input type="file" name="coverImage" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:opacity-90 cursor-pointer">
+                </div>
+            </div>
+            <div class="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
+                <button type="button" onclick="closeEditBookModal()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-md hover:opacity-95 transition">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openEditBookModal(id, title, author, description, isGlobal) {
+        const modal = document.getElementById('edit-book-modal');
+        const card = document.getElementById('edit-book-modal-card');
+        const form = document.getElementById('edit-book-form');
+        
+        form.action = `/library/books/edit/${id}`;
+        document.getElementById('edit-book-title').value = title;
+        document.getElementById('edit-book-author').value = author;
+        document.getElementById('edit-book-description').value = description;
+        document.getElementById('edit-book-scope').value = isGlobal;
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            card.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeEditBookModal() {
+        const modal = document.getElementById('edit-book-modal');
+        const card = document.getElementById('edit-book-modal-card');
+        modal.classList.add('opacity-0');
+        card.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
     function switchTab(activeId, inactiveId, btn) {
         // Toggle view panels
         document.getElementById(activeId).classList.remove('hidden');

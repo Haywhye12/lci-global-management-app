@@ -140,6 +140,61 @@ router.post('/books/upload', isAuthenticated, handleBookUpload, async (req, res)
     }
 });
 
+// Edit Book Details & Upload Files - Superadmin, Pastor, & Admin only
+router.post('/books/edit/:id', isAuthenticated, handleBookUpload, async (req, res) => {
+    const isAuthorized = ['superadmin', 'pastor', 'admin'].includes(req.session.user.role);
+    if (!isAuthorized) {
+        return res.redirect('/library?error=Access Denied! Only pastors and admins can edit books.');
+    }
+
+    const { title, author, description, isGlobal } = req.body;
+    const { id } = req.params;
+
+    try {
+        const book = await Book.findByPk(id);
+        if (!book) {
+            return res.redirect('/library?error=Book not found.');
+        }
+
+        // Check permissions: non-superadmin can only edit their own branch books
+        if (req.session.user.role !== 'superadmin' && book.installationId && book.installationId !== req.activeInstallationId) {
+            return res.redirect('/library?error=Access Denied! You can only edit books from your own branch.');
+        }
+
+        const updateData = {
+            title,
+            author: author || 'LCI Global',
+            description,
+            installationId: isGlobal === 'true' ? null : req.activeInstallationId
+        };
+
+        if (req.files) {
+            if (req.files.bookPdf && req.files.bookPdf[0]) {
+                const pdfFile = req.files.bookPdf[0];
+                updateData.pdfUrl = await uploadImage(pdfFile.path, 'lci_books_pdf');
+            }
+            if (req.files.coverImage && req.files.coverImage[0]) {
+                const coverFile = req.files.coverImage[0];
+                updateData.coverUrl = await uploadImage(coverFile.path, 'lci_books_covers');
+            }
+        }
+
+        await Book.update(updateData, { where: { id } });
+
+        await AuditLog.create({
+            action: 'BOOK_UPDATED',
+            details: `Updated book details: "${title}" by ${author}`,
+            userId: req.session.user.id,
+            installationId: req.activeInstallationId
+        });
+
+        res.redirect('/library?success=Book details updated successfully!');
+    } catch (err) {
+        console.error('Failed to edit book details:', err);
+        res.redirect('/library?error=Server error updating book details.');
+    }
+});
+
 // Create Bulletin Board / Feed Post - Any member can post
 router.post('/posts/create', isAuthenticated, async (req, res) => {
     const { title, content } = req.body;
